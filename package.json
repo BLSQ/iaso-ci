@@ -1,0 +1,29 @@
+{
+  "name": "iaso-ci",
+  "version": "0.0.1",
+  "description": "IASO CI Github (Reusable) Actions ",
+  "homepage": "https://github.com/BLSQ/iaso-ci#readme",
+  "bugs": {
+    "url": "https://github.com/BLSQ/iaso-ci/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BLSQ/iaso-ci.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@actions/core": "^3.0.1",
+    "@actions/github": "^9.1.1"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.3",
+    "@rollup/plugin-node-resolve": "^16.0.3",
+    "rollup": "^4.62.0"
+  }
+}

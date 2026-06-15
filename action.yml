@@ -1,0 +1,16 @@
+name: IASO CI Test
+description: IASO CI Test Action
+
+inputs:
+    branch:
+        description: The branch to test
+        required: true
+        default: develop
+
+outputs:
+    time:
+        description: The time it took to test
+
+runs:
+    using: 'node20'
+    main: dist/index.js
