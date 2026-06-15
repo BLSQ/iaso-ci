@@ -5,7 +5,7 @@ try {
     
     // Get branch input
     const branch = core.getInput("branch");
-    core.info(`Branch :${branch}`)
+    core.info(`Branch : ${branch}`)
 
 
     // Get current time and set it as output variable
