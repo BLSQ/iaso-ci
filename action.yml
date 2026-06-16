@@ -1,5 +1,5 @@
-name: IASO CI Test
-description: IASO CI Test Action
+name: IASO CI Test (JS)
+description: IASO CI Test Action (JS)
 
 inputs:
     branch:
