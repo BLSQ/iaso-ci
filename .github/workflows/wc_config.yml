@@ -1,5 +1,7 @@
 name: Parse Iaso Tags (short sha, image_tags, slug/ticket code)
 
+# determine IASO branch from config if the plugin has some custom loging for building
+
 on:
   workflow_call:
     inputs:
