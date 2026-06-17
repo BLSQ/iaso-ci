@@ -13,6 +13,10 @@ on:
         description: PR Title
         required: true
         type: string
+      plugin:
+        description: The name of the plugin, if any
+        required: false
+        type: string
     outputs:
       slug:
         description: Parsed ticket code (slug)
@@ -23,8 +27,20 @@ on:
       image_tags:
         description: Image tags (comma separated)
         value: ${{ jobs.config.outputs.image_tags }}
-
+      plugin:
+        description: The plugin name, if any
+        value 
 jobs:
+  plugin_setup:
+    runs-on: ubuntu-24.04
+    outputs:
+      branch: ${{ steps.plugin_setup.outputs.branch }}
+    steps:
+      - uses: BLSQ/iaso-ci/.github/actions/plugin-setup@main
+        id: plugin_setup
+        with:
+          branch: ${{ inputs.branch }}
+          plugin: ${{ inputs.plugin }}
   config:
     runs-on: ubuntu-24.04
     permissions:

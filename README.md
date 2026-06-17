@@ -1,34 +1,22 @@
-# IASO CI Github Actions
+# IASO CI
 
-This repository contains a series of actions that can be reused across all IASO plugins.
+Reusable GitHub Actions workflows shared across IASO plugins.
 
-## Get started
+## Workflows
 
-Install rollup
+- `wc_config.yml` — parse short SHA, image tags, and ticket slug from PR title/branch.
+- `wc_tests.yml` — run backend (Django) and frontend (JS/React) tests, lint, and format checks.
+- `wc_docker_build.yml` — build and push the IASO Docker image to Docker Hub.
+- `wc_docker_deploy.yml` — deploy a Docker image tag to an Elastic Beanstalk environment.
 
-```bash
-npm install --global rollup
-```
-
-## Inputs
-
-### `branch`
-
-**Required** The branch to test. Default develop
-
-## Outputs
-
-### `time`
-
-The time it took to test
-
-## Example usage
+## Usage
 
 ```yaml
-uses: actions/iaso-ci@<git_sha>
-with:
-    branch: IA-123
+jobs:
+  tests:
+    uses: BLSQ/iaso-ci/.github/workflows/wc_tests.yml@main
+    with:
+      branch: ${{ github.head_ref }}
 ```
 
-
-
+Pin to a commit SHA or tag for stability.
