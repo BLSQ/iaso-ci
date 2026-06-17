@@ -8,6 +8,11 @@ on:
         description: Branch to test
         required: true
         type: string
+      plugin:
+        description: Plugin name (scopes lint/format to plugins/<plugin>/)
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -82,7 +87,7 @@ jobs:
     env:
       DEBUG: true
       DJANGO_SETTINGS_MODULE: hat.settings
-      PLUGINS: polio,wfp,wfp_auth
+      PLUGINS: ${{ (inputs.plugin == '' || contains(fromJSON('["polio","wfp","wfp_auth"]'), inputs.plugin)) && 'polio,wfp,wfp_auth' || format('polio,wfp,wfp_auth,{0}', inputs.plugin) }}
       RDS_DB_NAME: github_actions
       SECRET_KEY: secret
       RDS_HOSTNAME: localhost
@@ -150,7 +155,15 @@ jobs:
   backend_lint_and_format:
     runs-on: ubuntu-24.04
     steps:
-      - name: Check out repository code
+      - name: Check out repository code (plugin nested via composite action)
+        if: inputs.plugin != ''
+        uses: BLSQ/iaso-ci/.github/actions/plugin-setup@main
+        with:
+          branch: ${{ inputs.branch }}
+          plugin: ${{ inputs.plugin }}
+
+      - name: Check out repository code (no plugin)
+        if: inputs.plugin == ''
         uses: actions/checkout@v6
         with:
           ref: ${{ inputs.branch }}
@@ -161,11 +174,22 @@ jobs:
           args: "--version"
           version: "0.9.6"
 
+      - name: Resolve ruff target path
+        id: ruff_path
+        env:
+          PLUGIN: ${{ inputs.plugin }}
+        run: |
+          if [ -n "${PLUGIN}" ]; then
+            echo "path=plugins/${PLUGIN}/" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=." >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Linting with ruff
-        run: ruff check --output-format=github .
+        run: ruff check --output-format=github ${{ steps.ruff_path.outputs.path }}
 
       - name: Formatting with ruff
-        run: ruff format --check .
+        run: ruff format --check ${{ steps.ruff_path.outputs.path }}
 
   frontend_lint_and_format:
     runs-on: ubuntu-24.04

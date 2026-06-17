@@ -7,11 +7,7 @@ inputs:
     required: true
   plugin:
     description: Plugin name (used as nested path under plugins/)
-    required: true
-  default_iaso_branch:
-    description: Fallback Iaso branch when no match found
     required: false
-    default: develop
   iaso_repository:
     description: Iaso repository (owner/name)
     required: false
@@ -30,7 +26,6 @@ runs:
       shell: bash
       env:
         PLUGIN_BRANCH: ${{ inputs.branch }}
-        DEFAULT_IASO_BRANCH: ${{ inputs.default_iaso_branch }}
         IASO_REPO: ${{ inputs.iaso_repository }}
       run: |
         echo "Plugin branch is '${PLUGIN_BRANCH}'"
@@ -38,8 +33,8 @@ runs:
           echo "Matching branch '${PLUGIN_BRANCH}' found in ${IASO_REPO}."
           echo "branch=${PLUGIN_BRANCH}" >> "$GITHUB_OUTPUT"
         else
-          echo "No matching branch in ${IASO_REPO}. Using default '${DEFAULT_IASO_BRANCH}'."
-          echo "branch=${DEFAULT_IASO_BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "No matching branch in ${IASO_REPO}. Using default 'develop'."
+          echo "branch=develop" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Checkout Iaso
@@ -49,12 +44,14 @@ runs:
         ref: ${{ steps.resolve.outputs.branch }}
 
     - name: Checkout plugin nested under plugins/${{ inputs.plugin }}
+      if: inputs.plugin != ''
       uses: actions/checkout@v6
       with:
         ref: ${{ inputs.branch }}
         path: plugins/${{ inputs.plugin }}
 
     - name: Verify layout
+      if: inputs.plugin != ''
       shell: bash
       env:
         PLUGIN: ${{ inputs.plugin }}
@@ -62,3 +59,4 @@ runs:
         ls -las
         ls -las plugins
         ls -las "plugins/${PLUGIN}"
+
