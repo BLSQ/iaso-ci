@@ -8,10 +8,6 @@ inputs:
   plugin:
     description: Plugin name (used as nested path under plugins/)
     required: false
-  iaso_repository:
-    description: Iaso repository (owner/name)
-    required: false
-    default: BLSQ/iaso
 
 outputs:
   branch:
@@ -26,21 +22,20 @@ runs:
       shell: bash
       env:
         PLUGIN_BRANCH: ${{ inputs.branch }}
-        IASO_REPO: ${{ inputs.iaso_repository }}
       run: |
         echo "Plugin branch is '${PLUGIN_BRANCH}'"
-        if git ls-remote --exit-code --heads "https://github.com/${IASO_REPO}.git" "${PLUGIN_BRANCH}" >/dev/null 2>&1; then
-          echo "Matching branch '${PLUGIN_BRANCH}' found in ${IASO_REPO}."
+        if git ls-remote --exit-code --heads "https://github.com/BLSQ/iaso.git" "${PLUGIN_BRANCH}" >/dev/null 2>&1; then
+          echo "Matching branch '${PLUGIN_BRANCH}' found in BLSQ/iaso."
           echo "branch=${PLUGIN_BRANCH}" >> "$GITHUB_OUTPUT"
         else
-          echo "No matching branch in ${IASO_REPO}. Using default 'develop'."
+          echo "No matching branch in BLSQ/iaso. Using default 'develop'."
           echo "branch=develop" >> "$GITHUB_OUTPUT"
         fi
 
     - name: Checkout Iaso
       uses: actions/checkout@v6
       with:
-        repository: ${{ inputs.iaso_repository }}
+        repository: BLSQ/iaso
         ref: ${{ steps.resolve.outputs.branch }}
 
     - name: Checkout plugin nested under plugins/${{ inputs.plugin }}
