@@ -54,7 +54,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Building IASO image based on iaso branch ${{ inputs.iaso_branch }} - plugin branch ${{ inputs.plugin_branch }}
+      - name: Building IASO image based on iaso branch ${{ inputs.iaso_branch }}
         run: |
           echo "
            ___    _    ____   ___
@@ -67,12 +67,21 @@ jobs:
           $(date)
           "
 
+      - name: Determine image repository based on plugin name
+        id: repo
+        run: |
+          if [ -n "${{ inputs.plugin_name }}" ]; then
+            echo "repo=${{ inputs.plugin_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "repo=iaso" >> $GITHUB_OUTPUT
+          fi
+
       - name: Format image tags
         id: tags
         env:
           INPUT_TAGS: ${{ inputs.image_tags }}
         run: |
-          echo "value=$(echo "$INPUT_TAGS" | tr ',' '\n' | sed 's|^|blsq/iaso:|' | tr '\n' ',' | sed 's/,$//')" >> $GITHUB_OUTPUT
+          echo "value=$(echo "$INPUT_TAGS" | tr ',' '\n' | sed 's|^|blsq/${{ steps.repo.outputs.repo }}:|' | tr '\n' ',' | sed 's/,$//')" >> $GITHUB_OUTPUT
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
