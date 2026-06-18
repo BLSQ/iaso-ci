@@ -13,6 +13,11 @@ on:
         required: false
         type: string
         default: ''
+      iaso_ci_ref:
+        description: iaso-ci branch/ref to source composite actions from (only needed when testing an iaso-ci feature branch)
+        required: false
+        type: string
+        default: 'main'
 
 permissions:
   contents: read
@@ -21,19 +26,12 @@ jobs:
   frontend_tests:
     runs-on: ubuntu-24.04
     steps:
-      - name: Extract iaso-ci ref from workflow_ref
-        if: inputs.plugin_name != ''
-        id: iaso_ref
-        run: echo "ref=${WORKFLOW_REF##*@}" >> "$GITHUB_OUTPUT"
-        env:
-          WORKFLOW_REF: ${{ github.workflow_ref }}
-
       - name: Checkout iaso-ci actions
         if: inputs.plugin_name != ''
         uses: actions/checkout@v6
         with:
           repository: BLSQ/iaso-ci
-          ref: ${{ steps.iaso_ref.outputs.ref }}
+          ref: ${{ inputs.iaso_ci_ref }}
           path: .iaso-ci
 
       - name: Check out IASO + plugin code (plugin nested via composite action)
@@ -119,19 +117,12 @@ jobs:
       RDS_USERNAME: postgres
       UV_CACHE_DIR: /tmp/.uv-cache
     steps:
-      - name: Extract iaso-ci ref from workflow_ref
-        if: inputs.plugin_name != ''
-        id: iaso_ref
-        run: echo "ref=${WORKFLOW_REF##*@}" >> "$GITHUB_OUTPUT"
-        env:
-          WORKFLOW_REF: ${{ github.workflow_ref }}
-
       - name: Checkout iaso-ci actions
         if: inputs.plugin_name != ''
         uses: actions/checkout@v6
         with:
           repository: BLSQ/iaso-ci
-          ref: ${{ steps.iaso_ref.outputs.ref }}
+          ref: ${{ inputs.iaso_ci_ref }}
           path: .iaso-ci
 
       - name: Check out IASO + plugin code (plugin nested via composite action)
@@ -201,19 +192,12 @@ jobs:
   backend_lint_and_format:
     runs-on: ubuntu-24.04
     steps:
-      - name: Extract iaso-ci ref from workflow_ref
-        if: inputs.plugin_name != ''
-        id: iaso_ref
-        run: echo "ref=${WORKFLOW_REF##*@}" >> "$GITHUB_OUTPUT"
-        env:
-          WORKFLOW_REF: ${{ github.workflow_ref }}
-
       - name: Checkout iaso-ci actions
         if: inputs.plugin_name != ''
         uses: actions/checkout@v6
         with:
           repository: BLSQ/iaso-ci
-          ref: ${{ steps.iaso_ref.outputs.ref }}
+          ref: ${{ inputs.iaso_ci_ref }}
           path: .iaso-ci
 
       - name: Check out IASO + plugin code (plugin nested via composite action)
@@ -255,19 +239,12 @@ jobs:
   frontend_lint_and_format:
     runs-on: ubuntu-24.04
     steps:
-      - name: Extract iaso-ci ref from workflow_ref
-        if: inputs.plugin_name != ''
-        id: iaso_ref
-        run: echo "ref=${WORKFLOW_REF##*@}" >> "$GITHUB_OUTPUT"
-        env:
-          WORKFLOW_REF: ${{ github.workflow_ref }}
-
       - name: Checkout iaso-ci actions
         if: inputs.plugin_name != ''
         uses: actions/checkout@v6
         with:
           repository: BLSQ/iaso-ci
-          ref: ${{ steps.iaso_ref.outputs.ref }}
+          ref: ${{ inputs.iaso_ci_ref }}
           path: .iaso-ci
 
       - name: Check out IASO + plugin code (plugin nested via composite action)
