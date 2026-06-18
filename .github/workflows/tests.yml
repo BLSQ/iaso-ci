@@ -13,17 +13,40 @@ on:
         required: false
         type: string
         default: ''
-      iaso_ci_ref:
-        description: iaso-ci branch/ref to source composite actions from (only needed when testing an iaso-ci feature branch)
-        required: false
-        type: string
-        default: 'main'
 
 permissions:
   contents: read
 
 jobs:
+  config:
+    runs-on: ubuntu-24.04
+    outputs:
+        iaso_branch: ${{ steps.resolve.outputs.iaso_branch }}
+        plugin_branch: ${{ steps.resolve.outputs.plugin_branch }}
+    steps:
+      - name: Resolve core and plugin branches
+        id: resolve
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.plugin_name }}" ]; then
+            echo "Resolving plugin branch for '${{ inputs.plugin_name }}'..."
+            if git ls-remote --exit-code --heads "https://github.com/BLSQ/iaso.git" "${{ inputs.branch }}" >/dev/null 2>&1; then
+              echo "Matching branch '${{ inputs.branch }}' found in BLSQ/iaso."
+              echo "iaso_branch=${{ inputs.branch }}" >> "$GITHUB_OUTPUT"
+              echo "plugin_branch=${{ inputs.branch }}" >> "$GITHUB_OUTPUT"
+            else
+              echo "No matching branch in BLSQ/iaso. Using default 'develop'."
+              echo "iaso_branch=develop" >> "$GITHUB_OUTPUT"
+              echo "plugin_branch=''" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "No plugin, core iaso only..."
+            echo "iaso_branch=${{ inputs.branch }}" >> "$GITHUB_OUTPUT"
+            echo "plugin_branch=''" >> "$GITHUB_OUTPUT"
+          fi
+
   frontend_tests:
+    needs: [ config ]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout iaso-ci actions
@@ -93,6 +116,7 @@ jobs:
         if: failure()
 
   backend_tests:
+    needs: [ config ]
     runs-on: ubuntu-24.04
     services:
       postgres:
@@ -117,26 +141,24 @@ jobs:
       RDS_USERNAME: postgres
       UV_CACHE_DIR: /tmp/.uv-cache
     steps:
-      - name: Checkout iaso-ci actions
-        if: inputs.plugin_name != ''
+      - name: Checkout IASO code
         uses: actions/checkout@v6
         with:
-          repository: BLSQ/iaso-ci
-          ref: ${{ inputs.iaso_ci_ref }}
-          path: .iaso-ci
+          ref: ${{ needs.config.outputs.iaso_branch }}
 
-      - name: Check out IASO + plugin code (plugin nested via composite action)
-        if: inputs.plugin_name != ''
-        uses: ./.iaso-ci/.github/actions/plugin-setup
-        with:
-          branch: ${{ inputs.branch }}
-          plugin: ${{ inputs.plugin_name }}
-
-      - name: Check out IASO code
-        if: inputs.plugin_name == ''
+      - name: Checkout plugin code
+        if: needs.config.outputs.plugin_branch != ''
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ needs.config.outputs.plugin_branch }}
+          path: plugins/${{ inputs.plugin_name }}
+
+      - name: Verify layout
+        if: needs.config.outputs.plugin_branch != ''
+        run: |
+          ls -las
+          ls -las plugins
+          ls -las plugins/${{ inputs.plugin_name }}
 
       - name: Install Python 3.9
         uses: actions/setup-python@v6
@@ -190,28 +212,27 @@ jobs:
         if: failure()
 
   backend_lint_and_format:
+    needs: [ config ]
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout iaso-ci actions
-        if: inputs.plugin_name != ''
+      - name: Checkout IASO code
         uses: actions/checkout@v6
         with:
-          repository: BLSQ/iaso-ci
-          ref: ${{ inputs.iaso_ci_ref }}
-          path: .iaso-ci
+          ref: ${{ needs.config.outputs.iaso_branch }}
 
-      - name: Check out IASO + plugin code (plugin nested via composite action)
-        if: inputs.plugin_name != ''
-        uses: ./.iaso-ci/.github/actions/plugin-setup
-        with:
-          branch: ${{ inputs.branch }}
-          plugin: ${{ inputs.plugin_name }}
-
-      - name: Check out IASO code
-        if: inputs.plugin_name == ''
+      - name: Checkout plugin code
+        if: needs.config.outputs.plugin_branch != ''
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ needs.config.outputs.plugin_branch }}
+          path: plugins/${{ inputs.plugin_name }}
+
+      - name: Verify layout
+        if: needs.config.outputs.plugin_branch != ''
+        run: |
+          ls -las
+          ls -las plugins
+          ls -las plugins/${{ inputs.plugin_name }}
 
       - name: Install ruff
         uses: astral-sh/ruff-action@v4.0.0
@@ -221,11 +242,9 @@ jobs:
 
       - name: Resolve ruff target path
         id: ruff_path
-        env:
-          PLUGIN: ${{ inputs.plugin_name }}
         run: |
-          if [ -n "${PLUGIN}" ]; then
-            echo "path=plugins/${PLUGIN}/" >> "$GITHUB_OUTPUT"
+          if [ -n "${{ inputs.plugin_name }}" ]; then
+            echo "path=plugins/${{ inputs.plugin_name }}/" >> "$GITHUB_OUTPUT"
           else
             echo "path=." >> "$GITHUB_OUTPUT"
           fi
@@ -237,28 +256,27 @@ jobs:
         run: ruff format --check ${{ steps.ruff_path.outputs.path }}
 
   frontend_lint_and_format:
+    needs: [ config ]
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout iaso-ci actions
-        if: inputs.plugin_name != ''
+      - name: Checkout IASO code
         uses: actions/checkout@v6
         with:
-          repository: BLSQ/iaso-ci
-          ref: ${{ inputs.iaso_ci_ref }}
-          path: .iaso-ci
+          ref: ${{ needs.config.outputs.iaso_branch }}
 
-      - name: Check out IASO + plugin code (plugin nested via composite action)
-        if: inputs.plugin_name != ''
-        uses: ./.iaso-ci/.github/actions/plugin-setup
-        with:
-          branch: ${{ inputs.branch }}
-          plugin: ${{ inputs.plugin_name }}
-
-      - name: Check out IASO code
-        if: inputs.plugin_name == ''
+      - name: Checkout plugin code
+        if: needs.config.outputs.plugin_branch != ''
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ needs.config.outputs.plugin_branch }}
+          path: plugins/${{ inputs.plugin_name }}
+
+      - name: Verify layout
+        if: needs.config.outputs.plugin_branch != ''
+        run: |
+          ls -las
+          ls -las plugins
+          ls -las plugins/${{ inputs.plugin_name }}
 
       - name: Use node.js 22.18.0
         uses: actions/setup-node@v6
