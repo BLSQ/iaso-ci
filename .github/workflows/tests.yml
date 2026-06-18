@@ -95,7 +95,7 @@ jobs:
     env:
       DEBUG: true
       DJANGO_SETTINGS_MODULE: hat.settings
-      PLUGINS: ${{ (inputs.plugin == '' || contains(fromJSON('["polio","wfp","wfp_auth"]'), inputs.plugin)) && 'polio,wfp,wfp_auth' || format('polio,wfp,wfp_auth,{0}', inputs.plugin) }}
+      PLUGINS: ${{ (inputs.plugin_name == '' || contains(fromJSON('["polio","wfp","wfp_auth"]'), inputs.plugin_name)) && 'polio,wfp,wfp_auth' || format('polio,wfp,wfp_auth,{0}', inputs.plugin_name) }}
       RDS_DB_NAME: github_actions
       SECRET_KEY: secret
       RDS_HOSTNAME: localhost
@@ -193,7 +193,7 @@ jobs:
       - name: Resolve ruff target path
         id: ruff_path
         env:
-          PLUGIN: ${{ inputs.plugin }}
+          PLUGIN: ${{ inputs.plugin_name }}
         run: |
           if [ -n "${PLUGIN}" ]; then
             echo "path=plugins/${PLUGIN}/" >> "$GITHUB_OUTPUT"
