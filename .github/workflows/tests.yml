@@ -21,9 +21,17 @@ jobs:
   frontend_tests:
     runs-on: ubuntu-24.04
     steps:
+      - name: Checkout iaso-ci at current workflow SHA
+        if: inputs.plugin_name != ''
+        uses: actions/checkout@v6
+        with:
+          repository: BLSQ/iaso-ci
+          ref: ${{ github.workflow_sha }}
+          path: .iaso-ci
+
       - name: Check out IASO + plugin code (plugin nested via composite action)
         if: inputs.plugin_name != ''
-        uses: ./.github/actions/plugin-setup
+        uses: ./.iaso-ci/.github/actions/plugin-setup
         with:
           branch: ${{ inputs.branch }}
           plugin: ${{ inputs.plugin_name }}
@@ -104,9 +112,17 @@ jobs:
       RDS_USERNAME: postgres
       UV_CACHE_DIR: /tmp/.uv-cache
     steps:
+      - name: Checkout iaso-ci at current workflow SHA
+        if: inputs.plugin_name != ''
+        uses: actions/checkout@v6
+        with:
+          repository: BLSQ/iaso-ci
+          ref: ${{ github.workflow_sha }}
+          path: .iaso-ci
+
       - name: Check out IASO + plugin code (plugin nested via composite action)
         if: inputs.plugin_name != ''
-        uses: ./.github/actions/plugin-setup
+        uses: ./.iaso-ci/.github/actions/plugin-setup
         with:
           branch: ${{ inputs.branch }}
           plugin: ${{ inputs.plugin_name }}
@@ -171,9 +187,17 @@ jobs:
   backend_lint_and_format:
     runs-on: ubuntu-24.04
     steps:
+      - name: Checkout iaso-ci at current workflow SHA
+        if: inputs.plugin_name != ''
+        uses: actions/checkout@v6
+        with:
+          repository: BLSQ/iaso-ci
+          ref: ${{ github.workflow_sha }}
+          path: .iaso-ci
+
       - name: Check out IASO + plugin code (plugin nested via composite action)
         if: inputs.plugin_name != ''
-        uses: ./.github/actions/plugin-setup
+        uses: ./.iaso-ci/.github/actions/plugin-setup
         with:
           branch: ${{ inputs.branch }}
           plugin: ${{ inputs.plugin_name }}
@@ -210,9 +234,17 @@ jobs:
   frontend_lint_and_format:
     runs-on: ubuntu-24.04
     steps:
+      - name: Checkout iaso-ci at current workflow SHA
+        if: inputs.plugin_name != ''
+        uses: actions/checkout@v6
+        with:
+          repository: BLSQ/iaso-ci
+          ref: ${{ github.workflow_sha }}
+          path: .iaso-ci
+
       - name: Check out IASO + plugin code (plugin nested via composite action)
         if: inputs.plugin_name != ''
-        uses: ./.github/actions/plugin-setup
+        uses: ./.iaso-ci/.github/actions/plugin-setup
         with:
           branch: ${{ inputs.branch }}
           plugin: ${{ inputs.plugin_name }}
