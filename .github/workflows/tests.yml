@@ -8,7 +8,7 @@ on:
         description: Branch to test
         required: true
         type: string
-      plugin:
+      plugin_name:
         description: Plugin name (scopes lint/format to plugins/<plugin>/)
         required: false
         type: string
@@ -21,7 +21,15 @@ jobs:
   frontend_tests:
     runs-on: ubuntu-24.04
     steps:
-      - name: Check out repository code
+      - name: Check out IASO + plugin code (plugin nested via composite action)
+        if: inputs.plugin_name != ''
+        uses: ./.github/actions/plugin-setup
+        with:
+          branch: ${{ inputs.branch }}
+          plugin: ${{ inputs.plugin_name }}
+
+      - name: Check out IASO code
+        if: inputs.plugin_name == ''
         uses: actions/checkout@v6
         with:
           ref: ${{ inputs.branch }}
@@ -96,7 +104,15 @@ jobs:
       RDS_USERNAME: postgres
       UV_CACHE_DIR: /tmp/.uv-cache
     steps:
-      - name: Check out repository code
+      - name: Check out IASO + plugin code (plugin nested via composite action)
+        if: inputs.plugin_name != ''
+        uses: ./.github/actions/plugin-setup
+        with:
+          branch: ${{ inputs.branch }}
+          plugin: ${{ inputs.plugin_name }}
+
+      - name: Check out IASO code
+        if: inputs.plugin_name == ''
         uses: actions/checkout@v6
         with:
           ref: ${{ inputs.branch }}
@@ -155,15 +171,15 @@ jobs:
   backend_lint_and_format:
     runs-on: ubuntu-24.04
     steps:
-      - name: Check out repository code (plugin nested via composite action)
-        if: inputs.plugin != ''
-        uses: BLSQ/iaso-ci/.github/actions/plugin-setup@main
+      - name: Check out IASO + plugin code (plugin nested via composite action)
+        if: inputs.plugin_name != ''
+        uses: ./.github/actions/plugin-setup
         with:
           branch: ${{ inputs.branch }}
-          plugin: ${{ inputs.plugin }}
+          plugin: ${{ inputs.plugin_name }}
 
-      - name: Check out repository code (no plugin)
-        if: inputs.plugin == ''
+      - name: Check out IASO code
+        if: inputs.plugin_name == ''
         uses: actions/checkout@v6
         with:
           ref: ${{ inputs.branch }}
@@ -194,7 +210,15 @@ jobs:
   frontend_lint_and_format:
     runs-on: ubuntu-24.04
     steps:
-      - name: Check out repository code
+      - name: Check out IASO + plugin code (plugin nested via composite action)
+        if: inputs.plugin_name != ''
+        uses: ./.github/actions/plugin-setup
+        with:
+          branch: ${{ inputs.branch }}
+          plugin: ${{ inputs.plugin_name }}
+
+      - name: Check out IASO code
+        if: inputs.plugin_name == ''
         uses: actions/checkout@v6
         with:
           ref: ${{ inputs.branch }}
