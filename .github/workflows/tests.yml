@@ -4,10 +4,15 @@ name: Iaso CI testing
 on:
   workflow_call:
     inputs:
-      branch:
-        description: Branch to test
+      iaso_branch:
+        description: IASO branch to test
         required: true
         type: string
+      plugin_branch:
+        description: Plugin branch to test
+        required: false
+        type: string
+        default: ''
       plugin_name:
         description: Plugin name (scopes lint/format to plugins/<plugin>/)
         required: false
@@ -18,52 +23,24 @@ permissions:
   contents: read
 
 jobs:
-  config:
-    runs-on: ubuntu-24.04
-    outputs:
-        iaso_branch: ${{ steps.resolve.outputs.iaso_branch }}
-        plugin_branch: ${{ steps.resolve.outputs.plugin_branch }}
-    steps:
-      - name: Resolve core and plugin branches
-        id: resolve
-        shell: bash
-        run: |
-          if [ -n "${{ inputs.plugin_name }}" ]; then
-            echo "Resolving plugin branch for '${{ inputs.plugin_name }}'..."
-            if git ls-remote --exit-code --heads "https://github.com/BLSQ/iaso.git" "${{ inputs.branch }}" >/dev/null 2>&1; then
-              echo "Matching branch '${{ inputs.branch }}' found in BLSQ/iaso."
-              echo "iaso_branch=${{ inputs.branch }}" >> "$GITHUB_OUTPUT"
-              echo "plugin_branch=${{ inputs.branch }}" >> "$GITHUB_OUTPUT"
-            else
-              echo "No matching branch in BLSQ/iaso. Using default 'develop'."
-              echo "iaso_branch=develop" >> "$GITHUB_OUTPUT"
-              echo "plugin_branch=''" >> "$GITHUB_OUTPUT"
-            fi
-          else
-            echo "No plugin, core iaso only..."
-            echo "iaso_branch=${{ inputs.branch }}" >> "$GITHUB_OUTPUT"
-            echo "plugin_branch=''" >> "$GITHUB_OUTPUT"
-          fi
-
   frontend_tests:
-    needs: [ config ]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout IASO code
         uses: actions/checkout@v6
         with:
           repository: 'BLSQ/iaso'
-          ref: ${{ needs.config.outputs.iaso_branch }}
+          ref: ${{ inputs.iaso_branch }}
 
       - name: Checkout plugin code
-        if: needs.config.outputs.plugin_branch != ''
+        if: inputs.plugin_branch != ''
         uses: actions/checkout@v6
         with:
           ref: ${{ needs.config.outputs.plugin_branch }}
           path: plugins/${{ inputs.plugin_name }}
 
       - name: Verify layout
-        if: needs.config.outputs.plugin_branch != ''
+        if: inputs.plugin_branch != ''
         run: |
           ls -las
           ls -las plugins
@@ -115,7 +92,6 @@ jobs:
         if: failure()
 
   backend_tests:
-    needs: [ config ]
     runs-on: ubuntu-24.04
     services:
       postgres:
@@ -144,17 +120,17 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: 'BLSQ/iaso'
-          ref: ${{ needs.config.outputs.iaso_branch }}
+          ref: ${{ inputs.iaso_branch }}
 
       - name: Checkout plugin code
-        if: needs.config.outputs.plugin_branch != ''
+        if: inputs.plugin_branch != ''
         uses: actions/checkout@v6
         with:
           ref: ${{ needs.config.outputs.plugin_branch }}
           path: plugins/${{ inputs.plugin_name }}
 
       - name: Verify layout
-        if: needs.config.outputs.plugin_branch != ''
+        if: inputs.plugin_branch != ''
         run: |
           ls -las
           ls -las plugins
@@ -212,24 +188,23 @@ jobs:
         if: failure()
 
   backend_lint_and_format:
-    needs: [ config ]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout IASO code
         uses: actions/checkout@v6
         with:
           repository: 'BLSQ/iaso'
-          ref: ${{ needs.config.outputs.iaso_branch }}
+          ref: ${{ inputs.iaso_branch }}
 
       - name: Checkout plugin code
-        if: needs.config.outputs.plugin_branch != ''
+        if: inputs.plugin_branch != ''
         uses: actions/checkout@v6
         with:
           ref: ${{ needs.config.outputs.plugin_branch }}
           path: plugins/${{ inputs.plugin_name }}
 
       - name: Verify layout
-        if: needs.config.outputs.plugin_branch != ''
+        if: inputs.plugin_branch != ''
         run: |
           ls -las
           ls -las plugins
@@ -257,24 +232,23 @@ jobs:
         run: ruff format --check ${{ steps.ruff_path.outputs.path }}
 
   frontend_lint_and_format:
-    needs: [ config ]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout IASO code
         uses: actions/checkout@v6
         with:
           repository: 'BLSQ/iaso'
-          ref: ${{ needs.config.outputs.iaso_branch }}
+          ref: ${{ inputs.iaso_branch }}
 
       - name: Checkout plugin code
-        if: needs.config.outputs.plugin_branch != ''
+        if: inputs.plugin_branch != ''
         uses: actions/checkout@v6
         with:
           ref: ${{ needs.config.outputs.plugin_branch }}
           path: plugins/${{ inputs.plugin_name }}
 
       - name: Verify layout
-        if: needs.config.outputs.plugin_branch != ''
+        if: inputs.plugin_branch != ''
         run: |
           ls -las
           ls -las plugins

@@ -1,4 +1,4 @@
-name: Parse Iaso Tags (short sha, image_tags, slug/ticket code)
+name: IASO config (short sha, image_tags, ticket code, branches to use)
 
 # determine IASO branch from config if the plugin has some custom loging for building
 
@@ -13,6 +13,11 @@ on:
         description: PR Title
         required: true
         type: string
+      plugin_name:
+        description: Plugin name
+        required: false
+        type: string
+        default: ''
 
     outputs:
       slug:
@@ -24,6 +29,12 @@ on:
       image_tags:
         description: Image tags (comma separated)
         value: ${{ jobs.config.outputs.image_tags }}
+      iaso_branch:
+        description: Resolved iaso branch to build from
+        value: ${{ jobs.config.outputs.iaso_branch }}
+      plugin_branch:
+        description: Resolved plugin branch to build from (if applicable)
+        value: ${{ jobs.config.outputs.plugin_branch }}
 
 jobs:
   config:
@@ -35,6 +46,8 @@ jobs:
       slug: ${{ steps.slug.outputs.slug }}
       short_sha: ${{ steps.short_sha.outputs.short_sha }}
       image_tags: ${{ steps.image_tags.outputs.image_tags }}
+      iaso_branch: ${{ steps.resolve.outputs.iaso_branch }}
+      plugin_branch: ${{ steps.resolve.outputs.plugin_branch }}
     steps:
       - name: Determine ticket code (slug) from PR title or branch name. Warn if not found
         id: slug
@@ -78,3 +91,23 @@ jobs:
             TAGS="${TAGS},${BRANCH}"
           fi
           echo "image_tags=${TAGS}" >> $GITHUB_OUTPUT
+
+      - name: Resolve core and plugin branches
+        id: resolve
+        run: |
+          if [ -n "${{ inputs.plugin_name }}" ]; then
+            echo "Resolving plugin branch for '${{ inputs.plugin_name }}'..."
+            if git ls-remote --exit-code --heads "https://github.com/BLSQ/iaso.git" "${{ inputs.branch }}" >/dev/null 2>&1; then
+              echo "Matching branch '${{ inputs.branch }}' found in BLSQ/iaso."
+              echo "iaso_branch=${{ inputs.branch }}" >> "$GITHUB_OUTPUT"
+              echo "plugin_branch=${{ inputs.branch }}" >> "$GITHUB_OUTPUT"
+            else
+              echo "No matching branch in BLSQ/iaso. Using default 'develop'."
+              echo "iaso_branch=develop" >> "$GITHUB_OUTPUT"
+              echo "plugin_branch=''" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            echo "No plugin, core iaso only..."
+            echo "iaso_branch=${{ inputs.branch }}" >> "$GITHUB_OUTPUT"
+            echo "plugin_branch=''" >> "$GITHUB_OUTPUT"
+          fi
