@@ -306,5 +306,14 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
+      - name: Resolve ESLint target path
+        id: eslint_path
+        run: |
+          if [ -n "${{ inputs.plugin_name }}" ]; then
+            echo "path=\"./plugins/${{ inputs.plugin_name }}/js/**/*.{js,jsx,ts,tsx}\"" >> "$GITHUB_OUTPUT"
+          else
+            echo "path=\"./hat/assets/js/**/*.{js,jsx,ts,tsx}\" \"./plugins/polio/js/**/*.{js,jsx,ts,tsx}\"" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check ESLint
-        run: npm run show-lint-problems
+        run: eslint ${{ steps.eslint_path.outputs.path }}
