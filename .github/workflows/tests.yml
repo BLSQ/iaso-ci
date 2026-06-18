@@ -49,26 +49,25 @@ jobs:
     needs: [ config ]
     runs-on: ubuntu-24.04
     steps:
-      - name: Checkout iaso-ci actions
-        if: inputs.plugin_name != ''
+      - name: Checkout IASO code
         uses: actions/checkout@v6
         with:
-          repository: BLSQ/iaso-ci
-          ref: ${{ inputs.iaso_ci_ref }}
-          path: .iaso-ci
+          repository: 'BLSQ/iaso'
+          ref: ${{ needs.config.outputs.iaso_branch }}
 
-      - name: Check out IASO + plugin code (plugin nested via composite action)
-        if: inputs.plugin_name != ''
-        uses: ./.iaso-ci/.github/actions/plugin-setup
-        with:
-          branch: ${{ inputs.branch }}
-          plugin: ${{ inputs.plugin_name }}
-
-      - name: Check out IASO code
-        if: inputs.plugin_name == ''
+      - name: Checkout plugin code
+        if: needs.config.outputs.plugin_branch != ''
         uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.branch }}
+          ref: ${{ needs.config.outputs.plugin_branch }}
+          path: plugins/${{ inputs.plugin_name }}
+
+      - name: Verify layout
+        if: needs.config.outputs.plugin_branch != ''
+        run: |
+          ls -las
+          ls -las plugins
+          ls -las plugins/${{ inputs.plugin_name }}
 
       - name: Use node.js 22.18.0
         uses: actions/setup-node@v6
@@ -144,6 +143,7 @@ jobs:
       - name: Checkout IASO code
         uses: actions/checkout@v6
         with:
+          repository: 'BLSQ/iaso'
           ref: ${{ needs.config.outputs.iaso_branch }}
 
       - name: Checkout plugin code
@@ -263,6 +263,7 @@ jobs:
       - name: Checkout IASO code
         uses: actions/checkout@v6
         with:
+          repository: 'BLSQ/iaso'
           ref: ${{ needs.config.outputs.iaso_branch }}
 
       - name: Checkout plugin code
