@@ -218,6 +218,7 @@ jobs:
       - name: Checkout IASO code
         uses: actions/checkout@v6
         with:
+          repository: 'BLSQ/iaso'
           ref: ${{ needs.config.outputs.iaso_branch }}
 
       - name: Checkout plugin code
