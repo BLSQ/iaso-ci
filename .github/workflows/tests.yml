@@ -280,14 +280,14 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
-      - name: Resolve ESLint extra path
-        id: eslint_path
+      - name: Resolve ESLint command
+        id: eslint
         run: |
           if [ -n "${{ inputs.plugin_name }}" ]; then
-            echo "extra_path=\"./plugins/${{ inputs.plugin_name }}/js/**/*.{js,jsx,ts,tsx}\"" >> "$GITHUB_OUTPUT"
+            echo "command=npx eslint \"./plugins/${{ inputs.plugin_name }}/js/**/*.{js,jsx,ts,tsx}\"" >> "$GITHUB_OUTPUT"
           else
-            echo "extra_path=" >> "$GITHUB_OUTPUT"
+            echo "command=npm run show-lint-problems" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Check ESLint
-        run: npm run show-lint-problems ${{ steps.eslint_path.outputs.extra_path }}
+        run: ${{ steps.eslint.outputs.command }}
