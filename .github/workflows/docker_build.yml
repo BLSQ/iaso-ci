@@ -38,7 +38,7 @@ jobs:
         if: inputs.plugin_branch != ''
         uses: actions/checkout@v6
         with:
-          ref: ${{ input.plugin_branch }}
+          ref: ${{ inputs.plugin_branch }}
           path: plugins/${{ inputs.plugin_name }}
 
       - name: Verify layout
