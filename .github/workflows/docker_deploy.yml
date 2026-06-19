@@ -1,4 +1,5 @@
 name: Deploy IASO docker
+run-name: Deploy docker image ${{ inputs.image_tag }} to ${{ inputs.environment }}
 
 on:
   workflow_call:

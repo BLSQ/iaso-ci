@@ -1,4 +1,5 @@
 name: Iaso CI testing
+run-name: Iaso tests on branch ${{ inputs.iaso_branch }} (plugin branch ${{ inputs.plugin_branch }})
 # This workflow can run all backend and frontend tests
 
 on:

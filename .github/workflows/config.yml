@@ -1,4 +1,5 @@
 name: IASO config (short sha, image_tags, ticket code, branches to use)
+run-name: Configure build params for branch ${{ inputs.branch }}
 
 # determine IASO branch from config if the plugin has some custom loging for building
 

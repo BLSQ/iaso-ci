@@ -1,4 +1,5 @@
 name: Build IASO docker prod image
+run-name: Build docker image with tags ${{ inputs.image_tags }}
 
 on:
   workflow_call:
