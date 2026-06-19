@@ -29,6 +29,13 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Received parameters
+        run: |
+          echo "IASO branch: ${{ inputs.iaso_branch }}"
+          echo "Plugin branch: ${{ inputs.plugin_branch }}"
+          echo "Plugin name: ${{ inputs.plugin_name }}"
+          echo "Image tags: ${{ inputs.image_tags }}"
+
       - name: Checkout IASO code
         uses: actions/checkout@v6
         with:

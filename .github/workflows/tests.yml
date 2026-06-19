@@ -27,6 +27,12 @@ jobs:
   frontend_tests:
     runs-on: ubuntu-24.04
     steps:
+      - name: Received parameters
+        run: |
+          echo "IASO branch: ${{ inputs.iaso_branch }}"
+          echo "Plugin branch: ${{ inputs.plugin_branch }}"
+          echo "Plugin name: ${{ inputs.plugin_name }}"
+
       - name: Checkout IASO code
         uses: actions/checkout@v6
         with:

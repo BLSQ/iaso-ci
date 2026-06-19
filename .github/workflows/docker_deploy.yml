@@ -44,6 +44,15 @@ jobs:
       short_sha: ${{ steps.vars.outputs.short_sha }}
       repo: ${{ steps.repo.outputs.repo }}
     steps:
+      - name: Received parameters
+        run: |
+          echo "IASO branch: ${{ inputs.iaso_branch }}"
+          echo "Plugin branch: ${{ inputs.plugin_branch }}"
+          echo "Plugin name: ${{ inputs.plugin_name }}"
+          echo "Environment: ${{ inputs.environment }}"
+          echo "Image tag: ${{ inputs.image_tag }}"
+          echo "Slack channel: ${{ inputs.slack_channel }}"
+
       - name: Set configs
         id: vars
         env:

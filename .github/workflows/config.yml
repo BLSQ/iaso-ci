@@ -50,6 +50,12 @@ jobs:
       iaso_branch: ${{ steps.resolve.outputs.iaso_branch }}
       plugin_branch: ${{ steps.resolve.outputs.plugin_branch }}
     steps:
+      - name: Received parameters
+        run: |
+          echo "Branch: ${{ inputs.branch }}"
+          echo "PR Title: ${{ inputs.pr_title }}"
+          echo "Plugin name: ${{ inputs.plugin_name }}"
+
       - name: Determine ticket code (slug) from PR title or branch name. Warn if not found
         id: slug
         env:
