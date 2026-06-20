@@ -5,7 +5,7 @@ on:
   workflow_call:
     inputs:
       image_tags:
-        description: Tag(s) to push the image with (comma-separated if multiple, e.g. "latest,develop"). The "blsq/iaso:" prefix is added automatically.
+        description: Tag(s) to push the image with (comma-separated if multiple, e.g. "latest,develop"). The "blsq/<repo>:" prefix is added automatically.
         required: true
         type: string
       iaso_branch:
