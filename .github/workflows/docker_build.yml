@@ -102,5 +102,5 @@ jobs:
           push: true
           tags: ${{ steps.tags.outputs.value }}
           # https://docs.docker.com/build/cache/backends/
-          cache-from: type=registry,ref=blsq/iaso:buildcache
-          cache-to: type=registry,ref=blsq/iaso:buildcache,mode=max
+          cache-from: type=registry,ref=blsq/${{ steps.repo.outputs.repo }}:buildcache
+          cache-to: type=registry,ref=blsq/${{ steps.repo.outputs.repo }}:buildcache,mode=max
