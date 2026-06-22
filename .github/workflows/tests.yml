@@ -165,7 +165,9 @@ jobs:
         run: uv tree --all-groups
 
       - name: Check that the orval generated files are up-to-date
-        run: scripts/check_orval.sh
+        run: |
+          source .venv/bin/activate
+          scripts/check_orval.sh
 
       - name: Check Backend (Django) translations
         run: |
