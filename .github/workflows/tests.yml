@@ -164,6 +164,9 @@ jobs:
       - name: Environment info
         run: uv tree --all-groups
 
+      - name: Check that the orval generated files are up-to-date
+        run: scripts/check_orval.sh
+
       - name: Check Backend (Django) translations
         run: |
           uv run python manage.py make_translations
