@@ -164,11 +164,6 @@ jobs:
       - name: Environment info
         run: uv tree --all-groups
 
-      - name: Check that the orval generated files are up-to-date
-        run: |
-          source .venv/bin/activate
-          scripts/check_orval.sh
-
       - name: Check Backend (Django) translations
         run: |
           uv run python manage.py make_translations
@@ -183,6 +178,11 @@ jobs:
           uv run python manage.py createcachetable
           uv run python -W "ignore" manage.py test --parallel auto
           # --parallel: run the suite across one process per CPU core (see IA-5186)
+
+      - name: Check that the orval generated files are up-to-date
+        run: |
+          source .venv/bin/activate
+          scripts/check_orval.sh
 
       - name: Minimize uv cache
         run: uv cache prune --ci
