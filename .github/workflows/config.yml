@@ -113,7 +113,7 @@ jobs:
             else
               echo "No matching branch in BLSQ/iaso. Using default 'develop'."
               echo "iaso_branch=develop" >> "$GITHUB_OUTPUT"
-              echo "plugin_branch=''" >> "$GITHUB_OUTPUT"
+              echo "plugin_branch=${{ inputs.branch }}" >> "$GITHUB_OUTPUT"
             fi
           else
             echo "No plugin, core iaso only..."
