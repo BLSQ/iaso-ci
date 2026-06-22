@@ -96,7 +96,7 @@ jobs:
           if [ -n "${SLUG}" ]; then
             TAGS="${SLUG},${TAGS}"
           fi
-          if [ "${BRANCH}" = "develop" ] || [ "${BRANCH}" = "main" ] || [ "${BRANCH}" = "develop-test" ]; then
+          if [ "${BRANCH}" = "develop" ] || [ "${BRANCH}" = "main" ]; then
             TAGS="${TAGS},${BRANCH}"
           fi
           echo "image_tags=${TAGS}" >> $GITHUB_OUTPUT
