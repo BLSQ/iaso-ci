@@ -324,6 +324,9 @@ jobs:
       RDS_PORT: 5432
       RDS_USERNAME: postgres
       UV_CACHE_DIR: /tmp/.uv-cache
+      ORVAL_TARGET_URL_DOMAIN: localhost:8000
+      ORVAL_TARGET_URL_PROTOCOL: http
+      BASE_API_URL: "http://localhost:8000"
     steps:
       - name: Checkout IASO code
         uses: actions/checkout@v6
@@ -396,6 +399,9 @@ jobs:
         run: |
           uv run python manage.py migrate
           uv run python manage.py createcachetable
+
+      - name: Start Django server in background
+        run: uv run python manage.py runserver
 
       - name: Check that the orval generated files are up-to-date
         run: |
