@@ -401,7 +401,9 @@ jobs:
           uv run python manage.py createcachetable
 
       - name: Start Django server in background
-        run: uv run python manage.py runserver
+        run: |
+          uv run python manage.py runserver --noreload &
+          timeout 30 bash -c 'until curl -sf ${{ env.BASE_API_URL }} > /dev/null 2>&1; do sleep 1; done'
 
       - name: Check that the orval generated files are up-to-date
         run: |
