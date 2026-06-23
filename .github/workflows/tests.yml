@@ -305,7 +305,7 @@ jobs:
       - name: Check ESLint
         run: ${{ steps.eslint.outputs.command }}
 
-# TODO: fix this - it's probably a better idea to generate a swagger schema file in an earlier step, and pass it to the orval command instead of running a django server
+# TODO: waiting for a fix in IASO to make the script work
 #  orval_tests:
 #    runs-on: ubuntu-24.04
 #    services:
@@ -405,11 +405,6 @@ jobs:
 #        run: |
 #          uv run python manage.py migrate
 #          uv run python manage.py createcachetable
-#
-#      - name: Start Django server in background
-#        run: |
-#          uv run python manage.py runserver --noreload &
-#          timeout 30 bash -c 'until curl -sf ${{ env.BASE_API_URL }} > /dev/null 2>&1; do sleep 1; done'
 #
 #      - name: Check that the orval generated files are up-to-date
 #        run: |
