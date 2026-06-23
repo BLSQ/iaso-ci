@@ -324,9 +324,9 @@ jobs:
       RDS_PORT: 5432
       RDS_USERNAME: postgres
       UV_CACHE_DIR: /tmp/.uv-cache
-      ORVAL_TARGET_URL_DOMAIN: localhost:8000
+      ORVAL_TARGET_URL_DOMAIN: localhost:8081
       ORVAL_TARGET_URL_PROTOCOL: http
-      BASE_API_URL: "http://localhost:8000"
+      BASE_API_URL: "http://localhost:8081"
     steps:
       - name: Checkout IASO code
         uses: actions/checkout@v6
