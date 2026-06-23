@@ -302,6 +302,17 @@ jobs:
 
   orval_tests:
     runs-on: ubuntu-24.04
+    env:
+      DEBUG: true
+      DJANGO_SETTINGS_MODULE: hat.settings
+      PLUGINS: ${{ (inputs.plugin_name == '' || contains(fromJSON('["polio","wfp","wfp_auth"]'), inputs.plugin_name)) && 'polio,wfp,wfp_auth' || format('polio,wfp,wfp_auth,{0}', inputs.plugin_name) }}
+      RDS_DB_NAME: github_actions
+      SECRET_KEY: secret
+      RDS_HOSTNAME: localhost
+      RDS_PASSWORD: postgres
+      RDS_PORT: 5432
+      RDS_USERNAME: postgres
+      UV_CACHE_DIR: /tmp/.uv-cache
     steps:
       - name: Checkout IASO code
         uses: actions/checkout@v6
@@ -349,6 +360,9 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
+      - name: Install GDAL and gettext
+        run: sudo apt-get update && sudo apt install gdal-bin gettext
+
       - name: Install Python 3.9
         uses: actions/setup-python@v6
         with:
@@ -366,6 +380,11 @@ jobs:
 
       - name: Environment info
         run: uv tree --all-groups
+
+      - name: Migrate database
+        run: |
+          uv run python manage.py migrate
+          uv run python manage.py createcachetable
 
       - name: Check that the orval generated files are up-to-date
         run: |
