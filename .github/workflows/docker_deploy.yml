@@ -97,7 +97,7 @@ jobs:
       - name: Pull the image and inspect it to get the digest and timestamp
         id: image_data
         run: |
-          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
           docker pull blsq/${{ needs.config.outputs.repo }}:${{ inputs.image_tag }}
           echo "image_digest=$(docker image inspect blsq/${{ needs.config.outputs.repo }}:${{ inputs.image_tag }} --format='{{index .RepoDigests 0}}' | cut -d ':' -f2)" >> $GITHUB_OUTPUT
           echo "image_timestamp=$(docker image inspect blsq/${{ needs.config.outputs.repo }}:${{ inputs.image_tag }} --format='{{ index .Created }}')" >> $GITHUB_OUTPUT
