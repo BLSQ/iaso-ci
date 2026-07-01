@@ -1,12 +1,23 @@
 name: Deploy IASO docker
+run-name: Deploy docker image ${{ inputs.image_tag }} to ${{ inputs.environment }}
 
 on:
   workflow_call:
     inputs:
-      branch:
-        description: Branch to deploy
+      iaso_branch:
+        description: IASO branch to deploy (docker compose, cron)
         required: true
         type: string
+      plugin_branch:
+        description: Plugin branch to deploy (docker compose extensions)
+        required: false
+        type: string
+        default: ''
+      plugin_name:
+        description: Plugin name
+        required: false
+        type: string
+        default: ''
       environment:
         description: playground, staging, demo or prod for worker and web or exact Env name like iaso-stg-worker. Using `upgrade` for now to test
         required: true
@@ -31,7 +42,17 @@ jobs:
     outputs:
       slack_channel: ${{ steps.vars.outputs.slack_channel }}
       short_sha: ${{ steps.vars.outputs.short_sha }}
+      repo: ${{ steps.repo.outputs.repo }}
     steps:
+      - name: Received parameters
+        run: |
+          echo "IASO branch: ${{ inputs.iaso_branch }}"
+          echo "Plugin branch: ${{ inputs.plugin_branch }}"
+          echo "Plugin name: ${{ inputs.plugin_name }}"
+          echo "Environment: ${{ inputs.environment }}"
+          echo "Image tag: ${{ inputs.image_tag }}"
+          echo "Slack channel: ${{ inputs.slack_channel }}"
+
       - name: Set configs
         id: vars
         env:
@@ -44,28 +65,37 @@ jobs:
             echo "short_sha=manual-$(openssl rand -hex 3)" >> $GITHUB_OUTPUT
           fi
 
+      - name: Determine image repo
+        id: repo
+        run: |
+          if [ -n "${{ inputs.plugin_branch }}" ] && [ -n "${{ inputs.plugin_name }}" ]; then
+            echo "repo=${{ inputs.plugin_name }}" >> $GITHUB_OUTPUT
+           elif [ -z "${{ inputs.plugin_branch }}" ] && [ -z "${{ inputs.plugin_name }}" ]; then
+            echo "repo=iaso" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Both inputs.plugin_branch and inputs.plugin_name must be provided together"
+            exit 1
+          fi
+
   check_image:
+    needs: config
     runs-on: ubuntu-24.04
     outputs:
       image_digest: ${{ steps.image_data.outputs.image_digest }}
       image_timestamp: ${{ steps.image_data.outputs.image_timestamp }}
     steps:
-      - name: Check if image blsq/iaso:${{ inputs.image_tag }} exists on Docker Hub
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://hub.docker.com/v2/repositories/blsq/iaso/tags/${{ inputs.image_tag }}")
-          if [ "$STATUS" != "200" ]; then
-            echo "::error::Image blsq/iaso:${{ inputs.image_tag }} not found on Docker Hub"
-            exit 1
-          fi
-          echo "Image blsq/iaso:${{ inputs.image_tag }} found"
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Pull the image and inspect it to get the digest and timestamp
         id: image_data
         run: |
-          docker pull blsq/iaso:${{ inputs.image_tag }}
-          echo "image_digest=$(docker image inspect blsq/iaso:${{ inputs.image_tag }} --format='{{index .RepoDigests 0}}' | cut -d ':' -f2)" >> $GITHUB_OUTPUT
-          echo "image_timestamp=$(docker image inspect blsq/iaso:${{ inputs.image_tag }} --format='{{ index .Created }}')" >> $GITHUB_OUTPUT
+          docker pull blsq/${{ needs.config.outputs.repo }}:${{ inputs.image_tag }}
+          echo "image_digest=$(docker image inspect blsq/${{ needs.config.outputs.repo }}:${{ inputs.image_tag }} --format='{{index .RepoDigests 0}}' | cut -d ':' -f2)" >> $GITHUB_OUTPUT
+          echo "image_timestamp=$(docker image inspect blsq/${{ needs.config.outputs.repo }}:${{ inputs.image_tag }} --format='{{ index .Created }}')" >> $GITHUB_OUTPUT
 
   deploy:
     needs: [ config, check_image ]
@@ -80,16 +110,13 @@ jobs:
       SLACK_FOOTER: "-"
 
     steps:
-      - name: Check out repository code
-        uses: actions/checkout@v6
-
       - name: Slack deployment start
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_COLOR: ""
           SLACK_TITLE: Started deployment of ${{ inputs.image_tag }} on ${{ inputs.environment }} ...
 
-      - name: Deploying ${{ inputs.image_tag }} to ${{ inputs.environment }}, using branch ${{ inputs.branch }}
+      - name: Deploying ${{ inputs.image_tag }} to ${{ inputs.environment }}, using branch ${{ inputs.iaso_branch }}
         run: |
           echo "
            ___    _    ____   ___
@@ -98,15 +125,40 @@ jobs:
            | | / ___ \ ___) | |_| |
           |___/_/   \_\____/ \___/
           ------------------------
-          Deploying ${{ inputs.image_tag }} to ${{ inputs.environment }}, using branch ${{ inputs.branch }}
+          Deploying ${{ inputs.image_tag }} to ${{ inputs.environment }}, using branch ${{ inputs.iaso_branch }} - plugin branch ${{ inputs.plugin_branch }}
           $(date)
           "
 
-      - name: Gather required files for deployment
+      - name: Checkout IASO code
+        uses: actions/checkout@v6
+        with:
+          repository: 'BLSQ/iaso'
+          ref: ${{ inputs.iaso_branch }}
+
+      - name: Checkout plugin code
+        if: inputs.plugin_branch != ''
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.plugin_branch }}
+          path: plugins/${{ inputs.plugin_name }}
+
+      - name: Verify layout
+        if: inputs.plugin_branch != ''
         run: |
-          docker compose -f docker/prod/docker-compose.prod.yml -f docker/prod/docker-compose.test.yml config --no-interpolate --no-path-resolution --no-normalize > deployment/docker-compose.yml
-          mv cron.yaml deployment/cron.yaml
-#          mv docker/prod/docker-compose.prod.yml deployment/docker-compose.yml
+          ls -las
+          ls -las plugins
+          ls -las plugins/${{ inputs.plugin_name }}
+
+      - name: Fetch IASO docker compose file
+        if : inputs.plugin_branch == ''
+        run: mv docker/prod/docker-compose.prod.yml deployment/docker-compose.yml
+
+      - name: Fetch IASO and plugin docker compose files
+        if : inputs.plugin_branch != ''
+        run: docker compose -f docker/prod/docker-compose.prod.yml -f plugins/${{ inputs.plugin_name }}/docker-compose.prod.yml config --no-interpolate --no-path-resolution --no-normalize > deployment/docker-compose.yml
+
+      - name: Fetch cron.yaml file
+        run: mv cron.yaml deployment/cron.yaml
 
       - name: Set env vars in beanstalk config
         run: |
@@ -120,14 +172,25 @@ jobs:
           sed -i s/plugin_env_3_value/plugin_3/g ./deployment/.ebextensions/environment.config
           cat ./deployment/.ebextensions/environment.config
 
-      - name: Set up Python 3.14
-        uses: actions/setup-python@v5
+      - name: Install Python 3.9
+        uses: actions/setup-python@v6
         with:
-          python-version: 3.14
+          python-version-file: "pyproject.toml"
 
-      - name: Setup beanstalk
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: 'uv.lock'
+          cache-suffix: deploy
+
+      - name: Install deployment dependencies
         run: |
-          pip install awsebcli==3.27.1 botocore==1.42.92 boto3==1.42.92
+          uv sync --only-group deploy --locked
+          echo "UV_NO_SYNC=1" >> $GITHUB_ENV
+
+      - name: Environment info
+        run: uv tree --only-group deploy
 
       - name: Determine EBS version name
         id: version
@@ -139,13 +202,16 @@ jobs:
           cd deployment
           git add .
           git status
-          python ../scripts/eb_deploy.py ${{ inputs.environment }} docker
+          uv run python ../scripts/eb_deploy.py ${{ inputs.environment }} docker
         env:
           # VERSION_NAME is the ID of the package generated by EBS that's gonna be deployed. It needs to be unique, otherwise an old package will be reployed
           VERSION_NAME: ${{ steps.version.outputs.VERSION_NAME }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: "eu-central-1"
+
+      - name: Minimize uv cache
+        run: uv cache prune --ci
 
       - name: Slack deployment success notification
         uses: rtCamp/action-slack-notify@v2
