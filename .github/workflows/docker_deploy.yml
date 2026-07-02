@@ -29,7 +29,7 @@ on:
       slack_channel:
         description: Slack Channel for notification (iasops by default)
         required: false
-        default: cloud-alerts
+        default: iasops
         type: string
 
 permissions:
