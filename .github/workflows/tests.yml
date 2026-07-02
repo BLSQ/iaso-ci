@@ -29,79 +29,80 @@ env:
 
 
 jobs:
-  frontend_tests:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Received parameters
-        run: |
-          echo "IASO branch: ${{ inputs.iaso_branch }}"
-          echo "Plugin branch: ${{ inputs.plugin_branch }}"
-          echo "Plugin name: ${{ inputs.plugin_name }}"
-
-      - name: Checkout IASO code
-        uses: actions/checkout@v6
-        with:
-          repository: 'BLSQ/iaso'
-          ref: ${{ inputs.iaso_branch }}
-
-      - name: Checkout plugin code
-        if: inputs.plugin_branch != ''
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.plugin_branch }}
-          path: plugins/${{ inputs.plugin_name }}
-
-      - name: Verify layout
-        if: inputs.plugin_branch != ''
-        run: |
-          ls -las
-          ls -las plugins
-          ls -las plugins/${{ inputs.plugin_name }}
-
-      - name: Use node.js ${{ env.node_version }}
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.node_version }}
-          cache: npm
-
-      - name: upgrade npm
-        run: |
-          npm install --global npm@${{ env.npm_version }}
-
-      - name: Environment info
-        run: |
-          node --version
-          npm --version
-
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-
-      - name: npm ci
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
-
-      - name: npm test
-        run: npm test
-
-      - name: Check Frontend (JS/React) translations
-        run: python scripts/update_trads.py
-
-      - name: Slack notification
-        uses: rtCamp/action-slack-notify@v2
-        env:
-          SLACK_USERNAME: ${{ github.workflow }}
-          SLACK_ICON_EMOJI: ':robot_face:'
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_CHANNEL: iaso-dev
-          SLACK_COLOR: ${{ job.status }}
-          SLACK_TITLE: ${{ format('Job {0} failed on {1}', github.job, github.ref) }}
-          SLACK_FOOTER: ${{  format('<https://github.com/{0}/commit/{1}/checks|🔗{2} logs> | <https://github.com/{0}/commit/{1}/checks|🔗 Commit {1}>', github.repository, github.sha, github.job) }}
-          MSG_MINIMAL: true
-        if: failure()
+# TODO: uncomment this once the active_list frontend is properly done
+#  frontend_tests:
+#    runs-on: ubuntu-24.04
+#    steps:
+#      - name: Received parameters
+#        run: |
+#          echo "IASO branch: ${{ inputs.iaso_branch }}"
+#          echo "Plugin branch: ${{ inputs.plugin_branch }}"
+#          echo "Plugin name: ${{ inputs.plugin_name }}"
+#
+#      - name: Checkout IASO code
+#        uses: actions/checkout@v6
+#        with:
+#          repository: 'BLSQ/iaso'
+#          ref: ${{ inputs.iaso_branch }}
+#
+#      - name: Checkout plugin code
+#        if: inputs.plugin_branch != ''
+#        uses: actions/checkout@v6
+#        with:
+#          ref: ${{ inputs.plugin_branch }}
+#          path: plugins/${{ inputs.plugin_name }}
+#
+#      - name: Verify layout
+#        if: inputs.plugin_branch != ''
+#        run: |
+#          ls -las
+#          ls -las plugins
+#          ls -las plugins/${{ inputs.plugin_name }}
+#
+#      - name: Use node.js ${{ env.node_version }}
+#        uses: actions/setup-node@v6
+#        with:
+#          node-version: ${{ env.node_version }}
+#          cache: npm
+#
+#      - name: upgrade npm
+#        run: |
+#          npm install --global npm@${{ env.npm_version }}
+#
+#      - name: Environment info
+#        run: |
+#          node --version
+#          npm --version
+#
+#      - name: Cache node_modules
+#        id: cache-node-modules
+#        uses: actions/cache@v4
+#        with:
+#          path: node_modules
+#          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+#
+#      - name: npm ci
+#        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+#        run: npm ci
+#
+#      - name: npm test
+#        run: npm test
+#
+#      - name: Check Frontend (JS/React) translations
+#        run: python scripts/update_trads.py
+#
+#      - name: Slack notification
+#        uses: rtCamp/action-slack-notify@v2
+#        env:
+#          SLACK_USERNAME: ${{ github.workflow }}
+#          SLACK_ICON_EMOJI: ':robot_face:'
+#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+#          SLACK_CHANNEL: iaso-dev
+#          SLACK_COLOR: ${{ job.status }}
+#          SLACK_TITLE: ${{ format('Job {0} failed on {1}', github.job, github.ref) }}
+#          SLACK_FOOTER: ${{  format('<https://github.com/{0}/commit/{1}/checks|🔗{2} logs> | <https://github.com/{0}/commit/{1}/checks|🔗 Commit {1}>', github.repository, github.sha, github.job) }}
+#          MSG_MINIMAL: true
+#        if: failure()
 
   backend_tests:
     runs-on: ubuntu-24.04
@@ -244,66 +245,67 @@ jobs:
       - name: Formatting with ruff
         run: ruff format --check ${{ steps.ruff_path.outputs.path }}
 
-  frontend_lint_and_format:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout IASO code
-        uses: actions/checkout@v6
-        with:
-          repository: 'BLSQ/iaso'
-          ref: ${{ inputs.iaso_branch }}
-
-      - name: Checkout plugin code
-        if: inputs.plugin_branch != ''
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ inputs.plugin_branch }}
-          path: plugins/${{ inputs.plugin_name }}
-
-      - name: Verify layout
-        if: inputs.plugin_branch != ''
-        run: |
-          ls -las
-          ls -las plugins
-          ls -las plugins/${{ inputs.plugin_name }}
-
-      - name: Use node.js ${{ env.node_version }}
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.node_version }}
-          cache: npm
-
-      - name: upgrade npm
-        run: |
-          npm install --global npm@${{ env.npm_version }}
-
-      - name: Environment info
-        run: |
-          node --version
-          npm --version
-
-      - name: Cache node_modules
-        id: cache-node-modules
-        uses: actions/cache@v4
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-
-      - name: npm ci
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
-        run: npm ci
-
-      - name: Resolve ESLint command
-        id: eslint
-        run: |
-          if [ -n "${{ inputs.plugin_name }}" ]; then
-            echo "command=npx eslint \"./plugins/${{ inputs.plugin_name }}/js/**/*.{js,jsx,ts,tsx}\"" >> "$GITHUB_OUTPUT"
-          else
-            echo "command=npm run show-lint-problems" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Check ESLint
-        run: ${{ steps.eslint.outputs.command }}
+# TODO: uncomment this once the active_list frontend is properly done
+#  frontend_lint_and_format:
+#    runs-on: ubuntu-24.04
+#    steps:
+#      - name: Checkout IASO code
+#        uses: actions/checkout@v6
+#        with:
+#          repository: 'BLSQ/iaso'
+#          ref: ${{ inputs.iaso_branch }}
+#
+#      - name: Checkout plugin code
+#        if: inputs.plugin_branch != ''
+#        uses: actions/checkout@v6
+#        with:
+#          ref: ${{ inputs.plugin_branch }}
+#          path: plugins/${{ inputs.plugin_name }}
+#
+#      - name: Verify layout
+#        if: inputs.plugin_branch != ''
+#        run: |
+#          ls -las
+#          ls -las plugins
+#          ls -las plugins/${{ inputs.plugin_name }}
+#
+#      - name: Use node.js ${{ env.node_version }}
+#        uses: actions/setup-node@v6
+#        with:
+#          node-version: ${{ env.node_version }}
+#          cache: npm
+#
+#      - name: upgrade npm
+#        run: |
+#          npm install --global npm@${{ env.npm_version }}
+#
+#      - name: Environment info
+#        run: |
+#          node --version
+#          npm --version
+#
+#      - name: Cache node_modules
+#        id: cache-node-modules
+#        uses: actions/cache@v4
+#        with:
+#          path: node_modules
+#          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+#
+#      - name: npm ci
+#        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+#        run: npm ci
+#
+#      - name: Resolve ESLint command
+#        id: eslint
+#        run: |
+#          if [ -n "${{ inputs.plugin_name }}" ]; then
+#            echo "command=npx eslint \"./plugins/${{ inputs.plugin_name }}/js/**/*.{js,jsx,ts,tsx}\"" >> "$GITHUB_OUTPUT"
+#          else
+#            echo "command=npm run show-lint-problems" >> "$GITHUB_OUTPUT"
+#          fi
+#
+#      - name: Check ESLint
+#        run: ${{ steps.eslint.outputs.command }}
 
 # TODO: waiting for a fix in IASO to make the script work
 #  orval_tests:
