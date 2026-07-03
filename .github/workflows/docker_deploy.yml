@@ -195,7 +195,7 @@ jobs:
       - name: Determine EBS version name
         id: version
         run: |
-          echo "VERSION_NAME=${{ inputs.image_tag }}-${{ needs.config.outputs.short_sha }}" >> $GITHUB_OUTPUT
+          echo "VERSION_NAME=${{ inputs.image_tag }}-${{ needs.config.outputs.short_sha }}-$(date +%Y%m%d_%H%M%S_%N)" >> $GITHUB_OUTPUT
 
       - name: Deploy to beanstalk (Docker) using scripts/eb_deploy.py
         run: |
