@@ -111,8 +111,8 @@ jobs:
               echo "iaso_branch=${{ inputs.branch }}" >> "$GITHUB_OUTPUT"
               echo "plugin_branch=${{ inputs.branch }}" >> "$GITHUB_OUTPUT"
             else
-              echo "No matching branch in BLSQ/iaso. Using default 'develop'."
-              echo "iaso_branch=develop" >> "$GITHUB_OUTPUT"
+              echo "No matching branch in BLSQ/iaso. Using default 'trypelim'."
+              echo "iaso_branch=trypelim" >> "$GITHUB_OUTPUT"
               echo "plugin_branch=${{ inputs.branch }}" >> "$GITHUB_OUTPUT"
             fi
           else
