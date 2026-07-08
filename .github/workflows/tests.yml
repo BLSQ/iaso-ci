@@ -209,11 +209,20 @@ jobs:
             echo "exclusion_tags=--exclude-tag=externaltools --exclude-tag=trypelim" >> $GITHUB_OUTPUT
           fi
 
+      - name: Compute test parallelization - don't run tests in parallel if there is a plugin
+        id: compute_parallelization
+        run: |
+          if [ -n "${{ inputs.plugin_name }}" ]; then
+            echo "parallelization=" >> $GITHUB_OUTPUT
+          else
+            echo "parallelization=--parallel auto" >> $GITHUB_OUTPUT
+          fi
+
       - name: Django tests
         run: |
           uv run python manage.py migrate
           uv run python manage.py createcachetable
-          uv run python -W "ignore" manage.py test ${{ steps.compute_exclusion_tags.outputs.exclusion_tags }}
+          uv run python -W "ignore" manage.py test ${{ steps.compute_parallelization.outputs.parallelization }} ${{ steps.compute_exclusion_tags.outputs.exclusion_tags }}
 
       - name: Minimize uv cache
         run: uv cache prune --ci
