@@ -13,12 +13,12 @@ on:
         description: Plugin branch to test
         required: false
         type: string
-        default: ''
+        default: ""
       plugin_name:
         description: Plugin name (scopes lint/format to plugins/<plugin>/)
         required: false
         type: string
-        default: ''
+        default: ""
 
 permissions:
   contents: read
@@ -26,7 +26,6 @@ permissions:
 env:
   node_version: 22.18.0
   npm_version: 11.13.0
-
 
 jobs:
   frontend_tests:
@@ -41,7 +40,7 @@ jobs:
       - name: Checkout IASO code
         uses: actions/checkout@v6
         with:
-          repository: 'BLSQ/iaso'
+          repository: "BLSQ/iaso"
           ref: ${{ inputs.iaso_branch }}
 
       - name: Checkout plugin code
@@ -94,7 +93,7 @@ jobs:
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_USERNAME: ${{ github.workflow }}
-          SLACK_ICON_EMOJI: ':robot_face:'
+          SLACK_ICON_EMOJI: ":robot_face:"
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: iaso-dev
           SLACK_COLOR: ${{ job.status }}
@@ -135,7 +134,7 @@ jobs:
           --health-retries 5
     env:
       COUCHDB_PASSWORD: secret
-      COUCHDB_URL: 'http://localhost:5984'
+      COUCHDB_URL: "http://localhost:5984"
       COUCHDB_USER: admin
       DEBUG: true
       DJANGO_SETTINGS_MODULE: hat.settings
@@ -152,7 +151,7 @@ jobs:
       - name: Checkout IASO code
         uses: actions/checkout@v6
         with:
-          repository: 'BLSQ/iaso'
+          repository: "BLSQ/iaso"
           ref: ${{ inputs.iaso_branch }}
 
       - name: Checkout plugin code
@@ -184,7 +183,7 @@ jobs:
         uses: astral-sh/setup-uv@v8.1.0
         with:
           enable-cache: true
-          cache-dependency-glob: 'uv.lock'
+          cache-dependency-glob: "uv.lock"
           cache-suffix: tests
 
       - name: Install backend dependencies
@@ -205,8 +204,7 @@ jobs:
         run: |
           uv run python manage.py migrate
           uv run python manage.py createcachetable
-          uv run python -W "ignore" manage.py test --parallel auto --exclude-tag=selenium --exclude-tag=externaltools
-          # --parallel: run the suite across one process per CPU core (see IA-5186)
+          uv run python -W "ignore" manage.py test --exclude-tag=selenium --exclude-tag=externaltools
 
       - name: Minimize uv cache
         run: uv cache prune --ci
@@ -215,7 +213,7 @@ jobs:
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_USERNAME: ${{ github.workflow }}
-          SLACK_ICON_EMOJI: ':robot_face:'
+          SLACK_ICON_EMOJI: ":robot_face:"
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_CHANNEL: iaso-dev
           SLACK_COLOR: ${{ job.status }}
@@ -230,7 +228,7 @@ jobs:
       - name: Checkout IASO code
         uses: actions/checkout@v6
         with:
-          repository: 'BLSQ/iaso'
+          repository: "BLSQ/iaso"
           ref: ${{ inputs.iaso_branch }}
 
       - name: Checkout plugin code
@@ -274,7 +272,7 @@ jobs:
       - name: Checkout IASO code
         uses: actions/checkout@v6
         with:
-          repository: 'BLSQ/iaso'
+          repository: "BLSQ/iaso"
           ref: ${{ inputs.iaso_branch }}
 
       - name: Checkout plugin code
