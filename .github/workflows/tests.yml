@@ -200,11 +200,20 @@ jobs:
       - name: Check for missing migrations
         run: uv run python manage.py makemigrations --check
 
+      - name: Compute exclusion test tags - don't run trypelim tests if there is no plugin
+        id: compute_exclusion_tags
+        run: |
+          if [ -n "${{ inputs.plugin_name }}" ]; then
+            echo "exclusion_tags=--exclude-tag=externaltools" >> $GITHUB_OUTPUT
+          else
+            echo "exclusion_tags=--exclude-tag=externaltools --exclude-tag=trypelim" >> $GITHUB_OUTPUT
+          fi
+
       - name: Django tests
         run: |
           uv run python manage.py migrate
           uv run python manage.py createcachetable
-          uv run python -W "ignore" manage.py test --exclude-tag=selenium --exclude-tag=externaltools
+          uv run python -W "ignore" manage.py test ${{ steps.compute_exclusion_tags.outputs.exclusion_tags }}
 
       - name: Minimize uv cache
         run: uv cache prune --ci
