@@ -177,6 +177,9 @@ jobs:
       - name: Install GDAL and gettext
         run: sudo apt-get update && sudo apt install gdal-bin gettext
 
+      - name: Install other Trypelim dependencies
+        run: sudo apt install -y mdbtools postgresql-client
+
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
         with:
@@ -314,17 +317,18 @@ jobs:
         if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
 
-      - name: Resolve ESLint command
-        id: eslint
-        run: |
-          if [ -n "${{ inputs.plugin_name }}" ]; then
-            echo "command=npx eslint \"./plugins/${{ inputs.plugin_name }}/js/**/*.{js,jsx,ts,tsx}\"" >> "$GITHUB_OUTPUT"
-          else
-            echo "command=npm run show-lint-problems" >> "$GITHUB_OUTPUT"
-          fi
+        # trypelim has front split in multiple directories, so this is not useful, let's hardcode paths
+#      - name: Resolve ESLint command
+#        id: eslint
+#        run: |
+#          if [ -n "${{ inputs.plugin_name }}" ]; then
+#            echo "command=npx eslint \"./plugins/${{ inputs.plugin_name }}/js/**/*.{js,jsx,ts,tsx}\"" >> "$GITHUB_OUTPUT"
+#          else
+#            echo "command=npm run show-lint-problems" >> "$GITHUB_OUTPUT"
+#          fi
 
       - name: Check ESLint
-        run: ${{ steps.eslint.outputs.command }}
+        run: npx eslint \"./plugins/trypelim/js/**/*.{js,jsx,ts,tsx}\"
 
 # TODO: waiting for a fix in IASO to make the script work
 #  orval_tests:
