@@ -158,7 +158,14 @@ jobs:
         run: docker compose -f docker/prod/docker-compose.prod.yml -f plugins/${{ inputs.plugin_name }}/docker-compose.prod.yml config --no-interpolate --no-path-resolution --no-normalize > deployment/docker-compose.yml
 
       - name: Fetch cron.yaml file
+        if : inputs.plugin_branch == ''
         run: mv cron.yaml deployment/cron.yaml
+
+      - name: Fetch cron.yaml from IASO and plugin
+        if : inputs.plugin_branch != ''
+        uses: mikefarah/yq@master
+        with:
+          cmd:  yq '.cron += load("plugins/${{ inputs.plugin_name }}/cron.yaml").cron' cron.yaml > deployment/cron.yaml
 
       - name: Set env vars in beanstalk config
         run: |
