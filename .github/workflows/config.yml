@@ -63,7 +63,7 @@ jobs:
           BRANCH: ${{ inputs.branch }}
           PR_TITLE: ${{ inputs.pr_title }}
         run: |
-          ticket_code=$(echo "${PR_TITLE}" | grep -Eo '[a-zA-Z_]+-[1-9][0-9]*' || true)
+          ticket_code=$(echo "${PR_TITLE}" | grep -Eo '[a-zA-Z_0-9]+-[1-9][0-9]*' || true)
           if [ -z "${ticket_code}" ]; then
             echo "Unable to parse ticket code (slug) from PR title ${PR_TITLE}. Trying branch name ${BRANCH}"
 
