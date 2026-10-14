@@ -119,7 +119,7 @@ jobs:
     env:
       DEBUG: true
       DJANGO_SETTINGS_MODULE: hat.settings
-      PLUGINS: ${{ (inputs.plugin_name == '' || contains(fromJSON('["polio","wfp","wfp_auth"]'), inputs.plugin_name)) && 'polio,wfp,wfp_auth' || format('polio,wfp,wfp_auth,{0}', inputs.plugin_name) }}
+      PLUGINS: ${{ (inputs.plugin_name == '' || contains(fromJSON('["wfp","wfp_auth"]'), inputs.plugin_name)) && 'wfp,wfp_auth' || format('wfp,wfp_auth,{0}', inputs.plugin_name) }}
       RDS_DB_NAME: github_actions
       SECRET_KEY: secret
       RDS_HOSTNAME: localhost
@@ -322,7 +322,7 @@ jobs:
 #    env:
 #      DEBUG: true
 #      DJANGO_SETTINGS_MODULE: hat.settings
-#      PLUGINS: ${{ (inputs.plugin_name == '' || contains(fromJSON('["polio","wfp","wfp_auth"]'), inputs.plugin_name)) && 'polio,wfp,wfp_auth' || format('polio,wfp,wfp_auth,{0}', inputs.plugin_name) }}
+#      PLUGINS: ${{ (inputs.plugin_name == '' || contains(fromJSON('["wfp","wfp_auth"]'), inputs.plugin_name)) && 'wfp,wfp_auth' || format('wfp,wfp_auth,{0}', inputs.plugin_name) }}
 #      RDS_DB_NAME: github_actions
 #      SECRET_KEY: secret
 #      RDS_HOSTNAME: localhost
