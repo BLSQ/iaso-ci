@@ -115,7 +115,7 @@ jobs:
         ports:
           - 5432:5432
         # needed because the postgres container does not provide a health check
-        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        options: --health-cmd pg_isready --health-interval 2s --health-timeout 5s --health-retries 30
     env:
       DEBUG: true
       DJANGO_SETTINGS_MODULE: hat.settings
@@ -179,8 +179,6 @@ jobs:
 
       - name: Django tests
         run: |
-          uv run python manage.py migrate
-          uv run python manage.py createcachetable
           uv run python -W "ignore" manage.py test --parallel auto
           # --parallel: run the suite across one process per CPU core (see IA-5186)
 
