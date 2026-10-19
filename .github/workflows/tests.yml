@@ -178,8 +178,6 @@ jobs:
         run: uv run python manage.py makemigrations --check
 
       - name: Django tests
-        # no `migrate` / `createcachetable` of the main database first: the test runner creates and migrates its own
-        # test database (with the cache table), the main one is never used
         run: |
           uv run python -W "ignore" manage.py test --parallel auto
           # --parallel: run the suite across one process per CPU core (see IA-5186)
