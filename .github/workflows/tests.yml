@@ -115,7 +115,6 @@ jobs:
         ports:
           - 5432:5432
         # needed because the postgres container does not provide a health check
-        # (checked every 2s: the job waits for the first healthy check, up to 30 retries)
         options: --health-cmd pg_isready --health-interval 2s --health-timeout 5s --health-retries 30
     env:
       DEBUG: true
