@@ -157,7 +157,9 @@ jobs:
           python-version-file: "pyproject.toml"
 
       - name: Install GDAL and gettext
-        run: sudo apt-get update && sudo apt install gdal-bin gettext
+        uses: awalsh128/cache-apt-pkgs-action@v1.6.3
+        with:
+          packages: gdal-bin gettext
 
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
