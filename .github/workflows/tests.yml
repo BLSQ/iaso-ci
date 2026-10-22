@@ -160,7 +160,6 @@ jobs:
         run: |
           # skip the Azure apt mirror: it's sometimes extremely slow, fall back to archive.ubuntu.com & co
           sudo sed -i '/azure\.archive\.ubuntu\.com/d' /etc/apt/apt-mirrors.txt
-          cat /etc/apt/apt-mirrors.txt
           sudo apt-get update && sudo apt install gdal-bin gettext
 
       - name: Install uv
