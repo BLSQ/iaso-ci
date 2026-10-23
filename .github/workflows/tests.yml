@@ -24,7 +24,7 @@ permissions:
   contents: read
 
 env:
-  node_version: 22.18.0
+  node_version: 22.23.4
   npm_version: 11.19.0
 
 
