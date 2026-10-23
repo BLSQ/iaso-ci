@@ -157,7 +157,11 @@ jobs:
           python-version-file: "pyproject.toml"
 
       - name: Install GDAL and gettext
-        run: sudo apt-get update && sudo apt install gdal-bin gettext
+        run: |
+          # skip the Azure apt mirror: it's sometimes extremely slow, fall back to archive.ubuntu.com & co
+          sudo sed -i '/azure\.archive\.ubuntu\.com/d' /etc/apt/apt-mirrors.txt
+          # pinning libgdal34t64 because it's the closest available to libgdal32 in the prod Dockerfile
+          sudo apt-get update && sudo apt install libgdal34t64 gettext
 
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
