@@ -87,8 +87,17 @@ jobs:
       - name: npm test
         run: npm test
 
+      # ts-incremental.mjs only exists on IASO `develop` for now. Plugin repos
+      # (e.g. polio) test against IASO `main`, where the script is not available
+      # yet, so skip instead of failing with MODULE_NOT_FOUND. It will run
+      # again once the script reaches `main` with the next IASO release.
       - name: tsc
-        run: node ./ts-incremental.mjs
+        run: |
+          if [ -f ./ts-incremental.mjs ]; then
+            node ./ts-incremental.mjs
+          else
+            echo "::warning::ts-incremental.mjs not found on IASO branch '${{ inputs.iaso_branch }}' - skipping tsc check."
+          fi
 
       - name: Check Frontend (JS/React) translations
         run: python scripts/update_trads.py
