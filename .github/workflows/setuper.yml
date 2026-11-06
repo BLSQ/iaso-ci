@@ -36,6 +36,7 @@ jobs:
       RDS_USERNAME: postgres
       SECRET_KEY: secret
       UV_CACHE_DIR: /tmp/.uv-cache
+      UV_NO_SYNC: true
     steps:
       - name: Checkout IASO code
         uses: actions/checkout@v6
@@ -98,7 +99,7 @@ jobs:
 
       - name: Run setuper
         run: |
-          uv run --only-group setuper python setuper/setuper.py \
+          uv run python setuper/setuper.py \
             -u ${{ env.DJANGO_SUPERUSER_USERNAME }} \
             -p ${{ env.DJANGO_SUPERUSER_PASSWORD }} \
             -s "http://localhost:8081" \
