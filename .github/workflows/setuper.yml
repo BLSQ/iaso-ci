@@ -63,7 +63,7 @@ jobs:
           cache-suffix: tests
 
       - name: Install backend dependencies
-        run: uv sync --locked --no-dev
+        run: uv sync --locked --no-dev --group setuper
 
       - name: Environment info
         run: uv tree --all-groups
@@ -98,7 +98,7 @@ jobs:
 
       - name: Run setuper
         run: |
-          uv run python setuper/setuper.py \
+          uv run --only-group setuper python setuper/setuper.py \
             -u ${{ env.DJANGO_SUPERUSER_USERNAME }} \
             -p ${{ env.DJANGO_SUPERUSER_PASSWORD }} \
             -s "http://localhost:8081" \
