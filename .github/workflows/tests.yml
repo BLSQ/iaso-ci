@@ -24,13 +24,13 @@ permissions:
   contents: read
 
 env:
-  node_version: 22.23.4
-  npm_version: 11.19.0
   DEBUG: true
   DJANGO_SETTINGS_MODULE: hat.settings
   DJANGO_SUPERUSER_EMAIL: admin@iaso.com
   DJANGO_SUPERUSER_PASSWORD: iaso
   DJANGO_SUPERUSER_USERNAME: iaso
+  NODE_VERSION: 22.23.4
+  NPM_VERSION: 11.19.0
   PLUGINS: ${{ (inputs.plugin_name == '' || contains(fromJSON('["wfp","wfp_auth"]'), inputs.plugin_name)) && 'wfp,wfp_auth' || format('wfp,wfp_auth,{0}', inputs.plugin_name) }}
   RDS_DB_NAME: github_actions
   RDS_HOSTNAME: localhost
@@ -111,15 +111,15 @@ jobs:
           ls -las plugins
           ls -las plugins/${{ inputs.plugin_name }}
 
-      - name: Use node.js ${{ env.node_version }}
+      - name: Use node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.node_version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: upgrade npm
         run: |
-          npm install --global npm@${{ env.npm_version }}
+          npm install --global npm@${{ env.NPM_VERSION }}
 
       - name: Environment info
         run: |
@@ -313,15 +313,15 @@ jobs:
           ls -las plugins
           ls -las plugins/${{ inputs.plugin_name }}
 
-      - name: Use node.js ${{ env.node_version }}
+      - name: Use node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.node_version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: upgrade npm
         run: |
-          npm install --global npm@${{ env.npm_version }}
+          npm install --global npm@${{ env.NPM_VERSION }}
 
       - name: Environment info
         run: |
@@ -433,7 +433,7 @@ jobs:
             -p ${{ env.DJANGO_SUPERUSER_PASSWORD }} \
             -s "http://localhost:8081" \
             -a \
-            -n nightly
+            -n ci
 
       - name: Show Django server log
         if: always()
@@ -497,15 +497,15 @@ jobs:
 #          ls -las plugins
 #          ls -las plugins/${{ inputs.plugin_name }}
 #
-#      - name: Use node.js ${{ env.node_version }}
+#      - name: Use node.js ${{ env.NODE_VERSION }}
 #        uses: actions/setup-node@v6
 #        with:
-#          node-version: ${{ env.node_version }}
+#          node-version: ${{ env.NODE_VERSION }}
 #          cache: npm
 #
 #      - name: upgrade npm
 #        run: |
-#          npm install --global npm@${{ env.npm_version }}
+#          npm install --global npm@${{ env.NPM_VERSION }}
 #
 #      - name: Environment info
 #        run: |
