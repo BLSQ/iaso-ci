@@ -24,11 +24,64 @@ permissions:
   contents: read
 
 env:
-  node_version: 22.23.4
-  npm_version: 11.19.0
+  DEBUG: true
+  DJANGO_SETTINGS_MODULE: hat.settings
+  DJANGO_SUPERUSER_EMAIL: admin@iaso.com
+  DJANGO_SUPERUSER_PASSWORD: iaso
+  DJANGO_SUPERUSER_USERNAME: iaso
+  NODE_VERSION: 22.23.4
+  NPM_VERSION: 11.19.0
+  PLUGINS: ${{ (inputs.plugin_name == '' || contains(fromJSON('["wfp","wfp_auth"]'), inputs.plugin_name)) && 'wfp,wfp_auth' || format('wfp,wfp_auth,{0}', inputs.plugin_name) }}
+  RDS_DB_NAME: github_actions
+  RDS_HOSTNAME: localhost
+  RDS_PASSWORD: postgres
+  RDS_PORT: 5432
+  RDS_USERNAME: postgres
+  SECRET_KEY: secret
+  UV_CACHE_DIR: /tmp/.uv-cache
 
 
 jobs:
+  uv_cache:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout IASO code
+        uses: actions/checkout@v6
+        with:
+          repository: 'BLSQ/iaso'
+          ref: ${{ inputs.iaso_branch }}
+
+      - name: Checkout plugin code
+        if: inputs.plugin_branch != ''
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.plugin_branch }}
+
+      - name: Verify layout
+        if: inputs.plugin_branch != ''
+        run: |
+          ls -las
+          ls -las plugins
+          ls -las plugins/${{ inputs.plugin_name }}
+
+      - name: Install Python 3.9
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: 'uv.lock'
+          cache-suffix: tests
+
+      - name: Install backend dependencies
+        run: uv sync --locked
+
+      - name: Minimize uv cache
+        run: uv cache prune --ci
+
   frontend_tests:
     runs-on: ubuntu-24.04
     steps:
@@ -58,15 +111,15 @@ jobs:
           ls -las plugins
           ls -las plugins/${{ inputs.plugin_name }}
 
-      - name: Use node.js ${{ env.node_version }}
+      - name: Use node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.node_version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: upgrade npm
         run: |
-          npm install --global npm@${{ env.npm_version }}
+          npm install --global npm@${{ env.NPM_VERSION }}
 
       - name: Environment info
         run: |
@@ -107,6 +160,7 @@ jobs:
         if: failure()
 
   backend_tests:
+    needs: [ uv_cache ]
     runs-on: ubuntu-24.04
     services:
       postgres:
@@ -119,17 +173,6 @@ jobs:
           - 5432:5432
         # needed because the postgres container does not provide a health check
         options: --health-cmd pg_isready --health-interval 2s --health-timeout 5s --health-retries 30
-    env:
-      DEBUG: true
-      DJANGO_SETTINGS_MODULE: hat.settings
-      PLUGINS: ${{ (inputs.plugin_name == '' || contains(fromJSON('["wfp","wfp_auth"]'), inputs.plugin_name)) && 'wfp,wfp_auth' || format('wfp,wfp_auth,{0}', inputs.plugin_name) }}
-      RDS_DB_NAME: github_actions
-      SECRET_KEY: secret
-      RDS_HOSTNAME: localhost
-      RDS_PASSWORD: postgres
-      RDS_PORT: 5432
-      RDS_USERNAME: postgres
-      UV_CACHE_DIR: /tmp/.uv-cache
     steps:
       - name: Checkout IASO code
         uses: actions/checkout@v6
@@ -169,6 +212,7 @@ jobs:
           enable-cache: true
           cache-dependency-glob: 'uv.lock'
           cache-suffix: tests
+          save-cache: 'false'
 
       - name: Install backend dependencies
         run: uv sync --locked
@@ -188,9 +232,6 @@ jobs:
         run: |
           uv run python -W "ignore" manage.py test --parallel auto
           # --parallel: run the suite across one process per CPU core (see IA-5186)
-
-      - name: Minimize uv cache
-        run: uv cache prune --ci
 
       - name: Slack notification
         uses: rtCamp/action-slack-notify@v2
@@ -272,15 +313,15 @@ jobs:
           ls -las plugins
           ls -las plugins/${{ inputs.plugin_name }}
 
-      - name: Use node.js ${{ env.node_version }}
+      - name: Use node.js ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v6
         with:
-          node-version: ${{ env.node_version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: npm
 
       - name: upgrade npm
         run: |
-          npm install --global npm@${{ env.npm_version }}
+          npm install --global npm@${{ env.NPM_VERSION }}
 
       - name: Environment info
         run: |
@@ -309,6 +350,103 @@ jobs:
 
       - name: Check ESLint
         run: ${{ steps.eslint.outputs.command }}
+
+  setuper:
+    needs: [ uv_cache ]
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgis/postgis:16-3.5
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: github_actions
+        ports:
+          - 5432:5432
+        # needed because the postgres container does not provide a health check
+        options: --health-cmd pg_isready --health-interval 2s --health-timeout 5s --health-retries 30
+    steps:
+      - name: Checkout IASO code
+        uses: actions/checkout@v6
+        with:
+          repository: 'BLSQ/iaso'
+          ref: ${{ inputs.iaso_branch }}
+
+      - name: Install Python 3.9
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "pyproject.toml"
+
+      - name: Install GDAL and gettext
+        run: |
+          # skip the Azure apt mirror: it's sometimes extremely slow, fall back to archive.ubuntu.com & co
+          sudo sed -i '/azure\.archive\.ubuntu\.com/d' /etc/apt/apt-mirrors.txt
+          # pinning libgdal34t64 because it's the closest available to libgdal32 in the prod Dockerfile
+          sudo apt-get update && sudo apt install libgdal34t64
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.1.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: 'uv.lock'
+          cache-suffix: tests
+          save-cache: 'false'
+
+      - name: Install backend dependencies
+        run: uv sync --locked
+
+      - name: Environment info
+        run: uv tree --all-groups
+
+      - name: Migrate database
+        run: |
+          uv run python manage.py migrate
+          uv run python manage.py createcachetable
+
+      - name: Create superuser
+        run: uv run python manage.py createsuperuser --noinput
+
+      - name: Run local server for setuper
+        run: nohup uv run python manage.py runserver 0.0.0.0:8081 > django.log 2>&1 &
+
+      - name: Wait for local server to be ready
+        run: |
+          for i in $(seq 1 60); do
+            # any HTTP response (even a redirect or 404) means the server is accepting requests
+            if curl -s -o /dev/null http://localhost:8081/; then
+              echo "Django server is up"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Django server did not start within 2 minutes"
+          cat django.log
+          exit 1
+
+      - name: Start local worker
+        run: nohup uv run python manage.py tasks_worker > worker.log 2>&1 &
+
+      - name: Run setuper
+        run: |
+          uv run python setuper/setuper.py \
+            -u ${{ env.DJANGO_SUPERUSER_USERNAME }} \
+            -p ${{ env.DJANGO_SUPERUSER_PASSWORD }} \
+            -s "http://localhost:8081" \
+            -a \
+            -n ci
+
+      - name: Show Django server log
+        if: always()
+        run: cat django.log || true
+
+      - name: Show worker log
+        if: always()
+        run: cat worker.log || true
+
+      - name: Stop background processes
+        if: always()
+        run: |
+          pkill -f "manage.py (runserver|tasks_worker)" || true
 
 # TODO: waiting for a fix in IASO to make the script work
 #  orval_tests:
@@ -359,15 +497,15 @@ jobs:
 #          ls -las plugins
 #          ls -las plugins/${{ inputs.plugin_name }}
 #
-#      - name: Use node.js ${{ env.node_version }}
+#      - name: Use node.js ${{ env.NODE_VERSION }}
 #        uses: actions/setup-node@v6
 #        with:
-#          node-version: ${{ env.node_version }}
+#          node-version: ${{ env.NODE_VERSION }}
 #          cache: npm
 #
 #      - name: upgrade npm
 #        run: |
-#          npm install --global npm@${{ env.npm_version }}
+#          npm install --global npm@${{ env.NPM_VERSION }}
 #
 #      - name: Environment info
 #        run: |
