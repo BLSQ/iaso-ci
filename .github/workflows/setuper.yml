@@ -61,7 +61,7 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: 'uv.lock'
-          cache-suffix: setuper
+          cache-suffix: tests
 
       - name: Install backend dependencies
         run: uv sync --locked
@@ -113,6 +113,11 @@ jobs:
       - name: Show worker log
         if: always()
         run: cat worker.log || true
+
+      - name: Stop background processes
+        if: always()
+        run: |
+          pkill -f "manage.py (runserver|tasks_worker)" || true
 
       - name: Minimize uv cache
         run: uv cache prune --ci
