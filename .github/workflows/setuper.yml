@@ -61,7 +61,7 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: 'uv.lock'
-          cache-suffix: tests
+          cache-suffix: setuper
 
       - name: Install backend dependencies
         run: uv sync --locked
