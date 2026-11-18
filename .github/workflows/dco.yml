@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   check-trigger:
-    name: Check caller trigger
+    name: check_caller_trigger
     # Callers must trigger it from `pull_request` (not `pull_request_target`): it then runs safely
     # for PRs from forks, with a read-only token and no access to repository secrets.
     runs-on: ubuntu-24.04
@@ -24,7 +24,7 @@ jobs:
           exit 1
 
   dco:
-    name: DCO sign-off
+    name: DCO_sign_off
     needs: check-trigger
     runs-on: ubuntu-24.04
     if: github.event.pull_request.head.repo.full_name != github.repository
