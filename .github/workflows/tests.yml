@@ -373,6 +373,20 @@ jobs:
           repository: 'BLSQ/iaso'
           ref: ${{ inputs.iaso_branch }}
 
+      - name: Checkout plugin code
+        if: inputs.plugin_branch != ''
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.plugin_branch }}
+          path: plugins/${{ inputs.plugin_name }}
+
+      - name: Verify layout
+        if: inputs.plugin_branch != ''
+        run: |
+          ls -las
+          ls -las plugins
+          ls -las plugins/${{ inputs.plugin_name }}
+
       - name: Install Python 3.9
         uses: actions/setup-python@v6
         with:
