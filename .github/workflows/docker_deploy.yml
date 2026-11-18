@@ -56,7 +56,7 @@ jobs:
       - name: Set configs
         id: vars
         env:
-          DEFAULT_SLACK_CHANNEL: cloud-alerts
+          DEFAULT_SLACK_CHANNEL: iasops
         run: |
           echo "slack_channel=${{ github.event.inputs.slack_channel || env.DEFAULT_SLACK_CHANNEL }}" >> $GITHUB_OUTPUT
           if [ -n "$GITHUB_SHA" ]; then
