@@ -1,0 +1,59 @@
+# Checks that every commit by external contributors in a pull request carries a DCO sign-off
+# (a "Signed-off-by:" line matching the commit author's email).
+name: DCO
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  check-trigger:
+    name: Check caller trigger
+    # Callers must trigger it from `pull_request` (not `pull_request_target`): it then runs safely
+    # for PRs from forks, with a read-only token and no access to repository secrets.
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Ensure the caller uses the pull_request trigger
+        if: github.event_name != 'pull_request'
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          echo "::error::This workflow must be called from a 'pull_request' trigger, got '${EVENT_NAME}'. Using 'pull_request_target' would run fork code with secrets and a write token."
+          exit 1
+
+  dco:
+    name: DCO sign-off
+    needs: check-trigger
+    runs-on: ubuntu-24.04
+    if: github.event.pull_request.head.repo.full_name != github.repository
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Check Signed-off-by on every commit
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          missing=0
+          for c in $(git rev-list --no-merges "$BASE..$HEAD"); do
+            author_email=$(git log -1 --format='%ae' "$c")
+            if ! git log -1 --format='%B' "$c" \
+                 | grep -i '^Signed-off-by:' \
+                 | grep -qiF "<${author_email}>"; then
+              echo "::error::Commit $(git log -1 --format='%h %s' "$c") has no Signed-off-by line for <${author_email}>"
+              missing=1
+            fi
+          done
+          if [ "$missing" -ne 0 ]; then
+            echo ""
+            echo "Some commits are not signed off. See CONTRIBUTING.md for how to fix this:"
+            echo "  git rebase --signoff ${BASE}"
+            echo "  git push --force-with-lease"
+            exit 1
+          fi
+          echo "All commits are signed off."
